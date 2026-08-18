@@ -1,7 +1,8 @@
-import redis
-from fastapi import APIRouter, WebSocket
 import asyncio
 import os
+
+import redis
+from fastapi import APIRouter, WebSocket
 
 router = APIRouter()
 

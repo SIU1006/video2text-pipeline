@@ -1,11 +1,13 @@
-from fastapi import FastAPI
-from app.routes.upload import router
-from app.routes.websocket import router as websocket_router  #!!!
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-from prometheus_fastapi_instrumentator import Instrumentator
 import logging
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from prometheus_fastapi_instrumentator import Instrumentator
+
+from app.routes.upload import router
+from app.routes.websocket import router as websocket_router
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s"

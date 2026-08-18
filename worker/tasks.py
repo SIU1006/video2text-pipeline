@@ -1,12 +1,14 @@
-from worker.celery_app import celery_app
-import ffmpeg
-import os
-from dotenv import load_dotenv
-import redis
 import json
-import requests
-import ollama
 import logging
+import os
+
+import ffmpeg
+import ollama
+import redis
+import requests
+from dotenv import load_dotenv
+
+from worker.celery_app import celery_app
 
 load_dotenv()
 assert os.getenv("LLM_MODEL") is not None, "LLM_MODEL is not set in .env"
@@ -18,7 +20,8 @@ def process_video(task_id: str, file_path: str):
 
     r = redis.Redis.from_url(os.getenv("BROKER_URL", "redis://localhost:6379/0"))
 
-    audio_path = f"uploads/{task_id}.mp3"  # ensure finally block sees this variable even if ffmpeg fails
+    # ensure finally block sees this variable even if ffmpeg fails
+    audio_path = f"uploads/{task_id}.mp3"  
 
     try:
         # Check audio duration
@@ -69,8 +72,8 @@ def process_video(task_id: str, file_path: str):
             {"status": "completed", "task_id": task_id, "summary": summary}
         )
 
-        r.setex(f"result:{task_id}", 3600, complete)  # setex stores result for 1 hour
         # use Redis as a bridge to tell browser the task is completed and send the summary back to the browser
+        r.setex(f"result:{task_id}", 3600, complete)  # setex stores result for 1 hour
         r.publish(f"task:{task_id}", complete)
 
         logger.info(f"Task ID: {task_id}, Summary: {summary}")
