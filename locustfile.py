@@ -1,6 +1,7 @@
 from locust import HttpUser, task, between
 import os
 
+
 class VideoStreamingUser(HttpUser):
     wait_time = between(1, 3)
     host = "http://localhost:8080"
@@ -11,5 +12,5 @@ class VideoStreamingUser(HttpUser):
         with open(test_file_path, "rb") as f:
             self.client.post(
                 "/api/v1/upload",
-                files={"file": (os.path.basename(test_file_path), f, "audio/mpeg")}
+                files={"file": (os.path.basename(test_file_path), f, "audio/mpeg")},
             )
