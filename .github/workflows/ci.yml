@@ -83,10 +83,14 @@ jobs:
     permissions:
       contents: read
       packages: write
-    env:
-      GH_USERNAME: ${{ toLower(github.repository_owner) }}
 
     steps:
+    - name: Set lowercase repository owner
+      run: echo "GH_USERNAME=${OWNER,,}" >> "$GITHUB_ENV"
+      env:
+        OWNER: ${{ github.repository_owner }}
+
+
     - name: Checkout code
       uses: actions/checkout@v4
 
