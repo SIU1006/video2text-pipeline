@@ -83,6 +83,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+    env:
+      GH_USERNAME: ${{ toLower(github.repository_owner) }}
 
     steps:
     - name: Checkout code
@@ -105,8 +107,8 @@ jobs:
         file: Dockerfile
         push: true
         tags: |
-          ghcr.io/${{ github.repository_owner }}/fastapi:latest
-          ghcr.io/${{ github.repository_owner }}/celery:latest
+          ghcr.io/${{ env.GH_USERNAME }}/fastapi:latest
+          ghcr.io/${{ env.GH_USERNAME }}/celery:latest
         cache-from: type=gha,scope=fastapi # Read previous image layers from GHA cache
         cache-to: type=gha,mode=max,scope=fastapi # Buildx recognizes unchanged layer's hash and restores from GHA cache, no need reinstalling ML dependencies
 
@@ -117,7 +119,7 @@ jobs:
         context: .
         file: Dockerfile.inference
         push: true
-        tags: ghcr.io/${{ github.repository_owner }}/whisper:latest
+        tags: ghcr.io/${{ env.GH_USERNAME }}/whisper:latest
         cache-from: type=gha,scope=whisper
         cache-to: type=gha,mode=max,scope=whisper
 
