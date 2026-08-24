@@ -1,5 +1,5 @@
 import io
-from unittest.mock import patch, AsyncMock # MagicMock for async
+from unittest.mock import patch  # MagicMock for async
 
 from fastapi.testclient import TestClient
 
