@@ -1,4 +1,5 @@
-from unittest.mock import AsyncMock, MagicMock, patch
+import json
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -30,7 +31,7 @@ def mock_pipeline(tmp_path, monkeypatch):
 
         mock_ollama.Client.return_value = mock_ollama_client # CAll API -> REturn this
 
-        mock_redis_instance = AsyncMock()
+        mock_redis_instance = MagicMock()
         mock_redis.Redis.from_url.return_value = mock_redis_instance
 
         yield {
@@ -53,7 +54,10 @@ def test_success(mock_pipeline, tmp_path, monkeypatch):
     mock_pipeline["ollama"].chat.assert_called_once()
 
     r = mock_pipeline["redis"]
-    r.setex.assert_called_once()
+    r.setex.assert_any_call(
+        "result:task-1", 3600,
+        json.dumps({"status": "completed", "task_id": "task-1", "summary": "a short summary"})
+        )
     r.publish.assert_called_once()
 
 
@@ -74,7 +78,14 @@ def test_duration(mock_pipeline, tmp_path, monkeypatch):
     mock_pipeline["ollama"].chat.assert_not_called()
 
     r = mock_pipeline["redis"]
-    r.setex.assert_called_once()
+    r.setex.assert_any_call(
+            "result:task-2", 3600,
+            json.dumps({
+                "status": "error",
+                "task_id": "task-2",
+                "error": "Audio file duration exceeds 30 minutes limit: 50.00 minutes"
+            })
+    )
     r.publish.assert_called_once()
 
 def test_whisper_fail(mock_pipeline, tmp_path, monkeypatch):
@@ -93,6 +104,13 @@ def test_whisper_fail(mock_pipeline, tmp_path, monkeypatch):
     mock_pipeline["ollama"].chat.assert_not_called()
 
     r = mock_pipeline["redis"]
-    r.setex.assert_called_once()
+    r.setex.assert_any_call(
+            "result:task-1", 3600,
+            json.dumps({
+                "status": "error",
+                "task_id": "task-1",
+                "error": "Whisper service error: 500: Internal Server Error"
+            })
+    )
     r.publish.assert_called_once()
 

@@ -1,5 +1,5 @@
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from fastapi.testclient import TestClient
 
@@ -12,7 +12,7 @@ def test_cache_hit(monkeypatch):
 
     with patch("app.routes.websocket.redis") as mock_redis_module, \
          patch("app.routes.websocket.wait_for_message") as mock_wait:
-        mock_redis_instance = MagicMock()
+        mock_redis_instance = AsyncMock()
         mock_redis_module.Redis.from_url.return_value = mock_redis_instance
 
         cached_result = json.dumps({
@@ -22,7 +22,7 @@ def test_cache_hit(monkeypatch):
         })
         mock_redis_instance.get.return_value = cached_result.encode("utf-8") # Redis return by bytes
 
-        mock_pubsub = MagicMock()
+        mock_pubsub = AsyncMock()
         mock_redis_instance.pubsub.return_value = mock_pubsub
 
         with client.websocket_connect("/api/v1/ws/cached-task") as websocket: # Connect
@@ -41,7 +41,7 @@ def test_cache_miss(monkeypatch):
 
     with patch("app.routes.websocket.redis") as mock_redis_module, \
         patch("app.routes.websocket.wait_for_message") as mock_wait:
-        mock_redis_instance = MagicMock()
+        mock_redis_instance = AsyncMock()
         mock_redis_module.Redis.from_url.return_value = mock_redis_instance
 
         live_result = json.dumps({
@@ -52,7 +52,7 @@ def test_cache_miss(monkeypatch):
 
         mock_redis_instance.get.return_value = None # No Cache
 
-        mock_pubsub = MagicMock()
+        mock_pubsub = AsyncMock()
         mock_redis_instance.pubsub.return_value = mock_pubsub
 
         mock_wait.return_value = live_result.encode("utf-8")
