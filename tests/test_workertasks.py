@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, AsyncMock
 
 import pytest
 
@@ -30,7 +30,7 @@ def mock_pipeline(tmp_path, monkeypatch):
 
         mock_ollama.Client.return_value = mock_ollama_client # CAll API -> REturn this
 
-        mock_redis_instance = MagicMock()
+        mock_redis_instance = AsyncMock()
         mock_redis.Redis.from_url.return_value = mock_redis_instance
 
         yield {

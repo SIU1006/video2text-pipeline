@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 @celery_app.task(
-        name="process_video", bind=True,
+        name="process_video",
         autoretry_for=(requests.exceptions.RequestException,),
         retry_backoff=True, # delay autoretries for f(x) * 2s
         max_retries=3)
