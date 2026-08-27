@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 @celery_app.task(
-        name="process_video", bind=True,
+        name="process_video",
         autoretry_for=(requests.exceptions.RequestException,),
         retry_backoff=True, # delay autoretries for f(x) * 2s
         max_retries=3)
@@ -49,11 +49,12 @@ def process_video(task_id: str, file_path: str):
         # Send audio file to Whisper service for transcription
         whisper_url = os.getenv("WHISPER_URL", "http://localhost:3000")
 
-        response = requests.post(
-            f"{whisper_url}/transcribe",
-            json={"audio_file": audio_path},  # Bentoml v1.4 accepts JSON by default
-            timeout=700,
-        )
+        with open(audio_path, "rb") as f:
+            response = requests.post(
+                f"{whisper_url}/transcribe",
+                files = {"audio_file": (os.path.basename(audio_path), f, "audio/mpeg")},
+                timeout=700,
+            )
 
         if response.status_code != 200:
             raise ValueError(
