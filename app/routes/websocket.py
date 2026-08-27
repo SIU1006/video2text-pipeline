@@ -29,7 +29,6 @@ async def websocket_endpoint(websocket: WebSocket, task_id: str):
         stored = await r_client.get(f"result:{task_id}")
         if stored:
             await websocket.send_text(stored.decode("utf-8"))
-            await websocket.close()
             return
 
         try:
