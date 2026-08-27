@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from settings import UPLOAD_DIR
 from worker.tasks import process_video
 
 '''
@@ -23,7 +24,7 @@ def mock_pipeline(tmp_path, monkeypatch):
 
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {"text": "fake transcript"}
+        mock_response.json.return_value = "fake transcript"
         mock_requests.post.return_value = mock_response
 
         mock_ollama_client = MagicMock()
@@ -41,6 +42,10 @@ def mock_pipeline(tmp_path, monkeypatch):
             "redis": mock_redis_instance
         }
 
+def write_fake_audio(task_id: str) -> None:
+    audio_path = UPLOAD_DIR / f"{task_id}.mp3"
+    audio_path.write_bytes(b"fake audio")
+
 def test_success(mock_pipeline, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path) # Separate test result folder
     (tmp_path / "uploads").mkdir()
@@ -48,9 +53,17 @@ def test_success(mock_pipeline, tmp_path, monkeypatch):
     source_file = tmp_path / "input.mp4"
     source_file.write_bytes(b"fake bytes")
 
+    write_fake_audio("task-1")
     process_video("task-1", str(source_file))
 
     mock_pipeline["requests"].post.assert_called_once()
+
+    # Confirm the call is using multipart file upload
+    _, call_kwargs = mock_pipeline["requests"].post.call_args
+    assert "files" in call_kwargs
+    assert "audio_file" in call_kwargs["files"]
+    assert "json" not in call_kwargs
+
     mock_pipeline["ollama"].chat.assert_called_once()
 
     r = mock_pipeline["redis"]
@@ -98,6 +111,7 @@ def test_whisper_fail(mock_pipeline, tmp_path, monkeypatch):
     source_file = tmp_path / "input.mp4"
     source_file.write_bytes(b"fake bytes")
 
+    write_fake_audio("task-1")
     with pytest.raises(ValueError, match="Whisper service error: 500: Internal Server Error"):
         process_video("task-1", str(source_file))
 
