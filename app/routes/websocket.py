@@ -27,7 +27,7 @@ async def websocket_endpoint(websocket: WebSocket, task_id: str):
 
         # Check cache in Redis
         stored = await r_client.get(f"result:{task_id}")
-        if asyncio.iscoroutine(stored):
+        if stored:
             await websocket.send_text(stored.decode("utf-8"))
             await websocket.close()
             return
