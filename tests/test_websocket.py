@@ -1,5 +1,5 @@
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from fastapi.testclient import TestClient
 
@@ -23,7 +23,8 @@ def test_cache_hit(monkeypatch):
         mock_redis_instance.get.return_value = cached_result.encode("utf-8") # Redis return by bytes
 
         mock_pubsub = AsyncMock()
-        mock_redis_instance.pubsub.return_value = mock_pubsub
+        # need set as MagicMock since mock_redis_instance is AsyncMock, which auto-generates every child attribute as async too, i.e. .pubsub, but .pubsub needs to be sync, no I/O
+        mock_redis_instance.pubsub = MagicMock(return_value=mock_pubsub)
 
         with client.websocket_connect("/api/v1/ws/cached-task") as websocket: # Connect
             data = websocket.receive_text()
@@ -53,7 +54,7 @@ def test_cache_miss(monkeypatch):
         mock_redis_instance.get.return_value = None # No Cache
 
         mock_pubsub = AsyncMock()
-        mock_redis_instance.pubsub.return_value = mock_pubsub
+        mock_redis_instance.pubsub = MagicMock(return_value=mock_pubsub)
 
         mock_wait.return_value = live_result.encode("utf-8")
 
