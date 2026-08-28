@@ -6,33 +6,33 @@ from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.routes.upload import _validate_extension
+from app.routes.upload import validate_extension
 
 client = TestClient(app)
 
 def test_accepts_allowed_type():
-    assert _validate_extension("clip.mp4") == ".mp4"
+    assert validate_extension("clip.mp4") == ".mp4"
 
 
 def test_case_insensitive():
-    assert _validate_extension("CLIP.MP4") == ".mp4"
+    assert validate_extension("CLIP.MP4") == ".mp4"
 
 
 def test_rejects_disallowed_type():
     with pytest.raises(HTTPException) as exc_info:
-        _validate_extension("document.pdf")
+        validate_extension("document.pdf")
     assert exc_info.value.status_code == 415
 
 
 def test_rejects_missing_filename():
     with pytest.raises(HTTPException) as exc_info:
-        _validate_extension(None)
+        validate_extension(None)
     assert exc_info.value.status_code == 400
 
 
 def test_rejects_empty_filename():
     with pytest.raises(HTTPException) as exc_info:
-        _validate_extension("")
+        validate_extension("")
     assert exc_info.value.status_code == 400
 
 def test_returns_taskid():
