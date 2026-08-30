@@ -54,5 +54,7 @@ async def upload_file(file: UploadFile = File(...)):
     task_id = str(uuid.uuid4())
     file_path = UPLOAD_DIR / f"{task_id}{extension}"  # keep extension
 
+    await save_upload(file,file_path)
+
     process_video.delay(task_id, str(file_path))  # Pass next step to celery worker
     return UploadResponse(filename=file.filename, task_id=task_id, status="queued")
