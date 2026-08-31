@@ -1,8 +1,9 @@
 import argparse
 import time
 
-import mlflow
 from faster_whisper import WhisperModel
+
+import mlflow
 
 DEFAULT_SIZES = ["base", "small", "medium"]
 DEVICE = "cpu"
