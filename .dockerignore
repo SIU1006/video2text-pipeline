@@ -13,3 +13,5 @@ monitoring/
 mlflow.db
 mlruns/
 mlartifacts/
+
+model_eval/eval_data/

@@ -28,6 +28,10 @@ def main():
         help="Which size to benchmark (default: baseline.json's model_size, or 'base' if no baseline exists yet)",
     )
     parser.add_argument(
+        "--n-clips", type=int, default=20,
+        help="How many clips from the fixed eval set to check against (default: 20)",
+    )
+    parser.add_argument(
         "--max-regression", type=float, default=0.02,
         help="Max allowed WER increase over the baseline before failing (default: 0.02)",
     )
@@ -40,10 +44,10 @@ def main():
     baseline = load_baseline()
     model_size = args.model_size or (baseline["model_size"] if baseline else "base")
 
-    print(f"Benchmarking '{model_size}' against the fixed eval set...")
-    result = benchmark_model(model_size)
+    print(f"Benchmarking '{model_size}' against {args.n_clips} clips from the fixed eval set...")
+    result = benchmark_model(model_size, max_clips=args.n_clips)
     wer, rtf = result["wer"], result["rtf"]
-    print(f"  WER: {wer:.3f} | RTF: {rtf:.3f}")
+    print(f"  WER: {wer:.3f} | RTF: {rtf:.3f} (n_clips={result['n_clips']})")
 
     if wer > args.hard_ceiling:
         print(f"FAIL: WER {wer:.3f} exceeds the hard ceiling ({args.hard_ceiling}).")

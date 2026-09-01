@@ -2,9 +2,8 @@ import argparse
 from pathlib import Path
 
 import mlflow
-from mlflow.tracking import MlflowClient
-
 from benchmark import benchmark_model
+from mlflow.tracking import MlflowClient
 from model_wrapper import WhisperPyfuncWrapper
 
 '''

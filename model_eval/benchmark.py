@@ -28,16 +28,20 @@ _WER_TRANSFORM = jiwer.Compose(
     ]
 )
 
-def load_manifest() -> list[dict]:
+def load_manifest(max_clips: int | None = None) -> list[dict]:
     if not MANIFEST_PATH.exists():
         raise FileNotFoundError(
             f"{MANIFEST_PATH} not found. Run `python model_eval/prepare_eval_set.py` first to build the fixed eval set."
         )
-    return json.loads(MANIFEST_PATH.read_text())
 
-def benchmark_model(model_size: str, device: str = "cpu", compute_type: str = "int8") -> dict:
+    manifest = json.loads(MANIFEST_PATH.read_text())
+    if max_clips is not None:
+        manifest = manifest[:max_clips]
+    return manifest
 
-    manifest = load_manifest()
+def benchmark_model(model_size: str, device: str = "cpu", compute_type: str = "int8", max_clips: int | None = None) -> dict:
+
+    manifest = load_manifest(max_clips=max_clips)
 
     load_start = time.perf_counter()
     model = WhisperModel(model_size, device=device, compute_type=compute_type)

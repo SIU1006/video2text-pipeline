@@ -1,7 +1,7 @@
 import argparse
+import json
 import sys
 from pathlib import Path
-import json
 
 import mlflow
 from mlflow.exceptions import MlflowException
