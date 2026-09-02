@@ -119,12 +119,18 @@ def cleanup(*paths: str) -> None:
         if os.path.exists(path):
             os.remove(path)
 
-def metrics(task_name: str, status: str, exception_type: str, start: float | None = None):
+def metrics(
+    task_name: str,
+    status: str | None = None,
+    exception_type: str | None = None,
+    start: float | None = None,
+):
     '''Perform Prometheus metrics'''
-    if exception_type:
+    if status:
         TASK_TOTAL.labels(task_name=task_name, status=status).inc()
+    if exception_type:
         TASK_FAILURES_TOTAL.labels(task_name=task_name, exception_type=exception_type).inc()
-    elif start:
+    if start is not None:
         TASK_DURATION_SECONDS.labels(task_name=task_name).observe(time.perf_counter() - start)
 # =======================================================
 
