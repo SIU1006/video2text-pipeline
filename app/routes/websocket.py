@@ -3,7 +3,6 @@ import os
 
 from fastapi import APIRouter, WebSocket
 from redis import asyncio as redis
-from redis import asyncio as redis
 
 router = APIRouter()
 
