@@ -8,12 +8,7 @@ import requests
 
 from settings import WHISPER_URL
 from worker.celery_app import celery_app
-from worker.metrics import (
-    CANARY_WER,
-    TASK_DURATION_SECONDS,
-    TASK_FAILURES_TOTAL,
-    TASK_TOTAL
-)
+from worker.metrics import CANARY_WER, TASK_DURATION_SECONDS, TASK_FAILURES_TOTAL, TASK_TOTAL
 
 logger = logging.getLogger(__name__)
 
