@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from settings import BROKER_URL, LLM_MODEL, UPLOAD_DIR, WHISPER_URL
 from worker.celery_app import celery_app
 from worker.metrics import (
-    CANARY_WER,
+    CANARY_WER,  # noqa: F401 - re-exported so worker/canary.py can share one metrics module
     TASK_DURATION_SECONDS,
     TASK_FAILURES_TOTAL,
     TASK_TOTAL,
@@ -224,7 +224,8 @@ def sweep_stuck_tasks():
     finally:
         metrics(task_name="sweep_stuck_tasks", start=start)
 
-from worker import canary
+# registers check_canary_wer with celery_app as a side effect of this import
+from worker import canary  # noqa: F401
 
 
 
