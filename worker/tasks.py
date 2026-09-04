@@ -9,7 +9,14 @@ import redis
 import requests
 from dotenv import load_dotenv
 
-from settings import BROKER_URL, LLM_MODEL, UPLOAD_DIR, WHISPER_URL
+from settings import (
+    BROKER_URL,
+    LLM_MODEL,
+    REDIS_PASSWORD,
+    UPLOAD_DIR,
+    WHISPER_URL,
+    with_password,
+)
 from worker.celery_app import celery_app
 from worker.metrics import (
     CANARY_WER,  # noqa: F401 - re-exported so worker/canary.py can share one metrics module
@@ -21,6 +28,7 @@ from worker.metrics import (
 
 load_dotenv()
 assert os.getenv("LLM_MODEL") is not None, "LLM_MODEL is not set in .env"
+_redis_password = REDIS_PASSWORD or os.getenv("REDIS_PASSWORD")
 logger = logging.getLogger(__name__)
 ensure_metrics_server_started()
 
@@ -33,7 +41,7 @@ def start_running(task_id: str, file_path: str):
 
     audio_path = str(UPLOAD_DIR / f"{task_id}.mp3")
 
-    r = redis.Redis.from_url(BROKER_URL)
+    r = redis.Redis.from_url(with_password(BROKER_URL, _redis_password))
     r.setex(
         HEARTBEAT_KEY,
         HEARTBEAT_TTL_SECONDS,
@@ -48,6 +56,7 @@ def validate_duration(probe_result: dict, max_minutes: int = 30):
         raise ValueError(
             f"Audio file duration exceeds {max_minutes} minutes limit: {duration:.2f} minutes"
             )
+    return duration
 
 def extract_audio(file_path: str, audio_path: str) -> None:
     # Extract audio
@@ -143,8 +152,11 @@ def metrics(
 def process_video(task_id: str, file_path: str):
     r, audio_path = start_running(task_id, file_path)
     start = time.perf_counter()
+    video_length_bucket = "unknown"
+
     try:
-        validate_duration(ffmpeg.probe(file_path))
+        duration_minutes = validate_duration(ffmpeg.probe(file_path))
+        video_length_bucket = "under_10min" if duration_minutes < 10 else "over_10min"
         extract_audio(file_path, audio_path)
         transcript = transcribe(audio_path, WHISPER_URL)
         summary = summarize(transcript, LLM_MODEL)
@@ -213,7 +225,7 @@ def sweep_stuck_tasks():
     Check if there are heartbeats that are older than hard time limit but still no result stored
     >> sweep
     """
-    r = redis.Redis.from_url(BROKER_URL)
+    r = redis.Redis.from_url(with_password(BROKER_URL, _redis_password))
     start = time.perf_counter()
 
     try:
