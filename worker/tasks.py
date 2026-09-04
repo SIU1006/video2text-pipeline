@@ -133,6 +133,7 @@ def metrics(
     status: str | None = None,
     exception_type: str | None = None,
     start: float | None = None,
+    video_length_bucket: str | None = None,
 ):
     '''Perform Prometheus metrics'''
     if status:
@@ -140,7 +141,10 @@ def metrics(
     if exception_type:
         TASK_FAILURES_TOTAL.labels(task_name=task_name, exception_type=exception_type).inc()
     if start is not None:
-        TASK_DURATION_SECONDS.labels(task_name=task_name).observe(time.perf_counter() - start)
+        TASK_DURATION_SECONDS.labels(
+            task_name=task_name,
+            video_length_bucket=video_length_bucket or "unknown",
+        ).observe(time.perf_counter() - start)
 # =======================================================
 
 
@@ -164,11 +168,16 @@ def process_video(task_id: str, file_path: str):
 
     except Exception as e:
         store_failure(r, task_id, e)
-        metrics(task_name="process_video", status="failure", exception_type=type(e).__name__)
+        metrics(
+            task_name="process_video",
+            status="failure",
+            exception_type=type(e).__name__,
+            video_length_bucket=video_length_bucket,
+        )
         raise
 
     finally:
-        metrics(task_name="process_video", start=start)
+        metrics(task_name="process_video", start=start, video_length_bucket=video_length_bucket)
         cleanup(file_path, audio_path)
 
 
