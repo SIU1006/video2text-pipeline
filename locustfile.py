@@ -9,8 +9,7 @@ Both stages are timed separately so the report can distinguish
 "ingestion bottleneck" from "processing bottleneck".
 
 Usage:
-    locust -f locustfile.py --host http://localhost:8080 --headless \
-        -u 10 -r 1 -t 60s --csv=docs/loadtest/run --csv-full-history
+    locust -f locustfile.py --host http://localhost:8080
 
 The test video path is relative to CWD; run from the repo root.
 """
@@ -28,7 +27,9 @@ UPLOAD_PATH = "/api/v1/upload"
 WS_PATH_TEMPLATE = "/api/v1/ws/{task_id}"
 
 # How long to wait for a result before declaring the request failed.
-WS_RESULT_TIMEOUT_SEC = float(os.getenv("WS_RESULT_TIMEOUT_SEC", "120"))
+# Real tasks (54MB video) can take ~5 min; small clips take ~15 s. Under
+# load the result is queued behind other tasks, so allow generous headroom.
+WS_RESULT_TIMEOUT_SEC = float(os.getenv("WS_RESULT_TIMEOUT_SEC", "600"))
 
 
 def ws_url(host: str, task_id: str) -> str:
