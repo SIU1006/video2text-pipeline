@@ -150,6 +150,7 @@ def metrics(
 
 
 @celery_app.task(
+        bind=True, # pass self to task as first arg
         name="process_video",
         autoretry_for=RETRYABLE_EXCEPTIONS,
         retry_backoff=True, # delay autoretries for f(x) * 2s
