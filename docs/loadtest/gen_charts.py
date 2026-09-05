@@ -34,8 +34,10 @@ plt.tight_layout(); plt.savefig("docs/loadtest/e2e_latency.png", dpi=110); plt.c
 
 # 3. Throughput
 plt.figure(figsize=(5,3))
-plt.bar(labels, [d[5] for d in data], color="#9b59b6", label="uploads/s")
-plt.bar(labels, [d[6] for d in data], color="#c0392b", label="results/s")
+x = np.arange(len(labels))
+plt.bar(x-w/2, [d[5] for d in data], w, color="#9b59b6", label="uploads/s")
+plt.bar(x+w/2, [d[6] for d in data], w, color="#c0392b", label="results/s")
+plt.xticks(x, labels)
 plt.ylabel("Throughput (req/s)")
 plt.title("Throughput vs concurrency")
 plt.legend()

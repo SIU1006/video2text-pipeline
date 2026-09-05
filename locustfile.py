@@ -27,8 +27,7 @@ UPLOAD_PATH = "/api/v1/upload"
 WS_PATH_TEMPLATE = "/api/v1/ws/{task_id}"
 
 # How long to wait for a result before declaring the request failed.
-# Real tasks (54MB video) can take ~5 min; small clips take ~15 s. Under
-# load the result is queued behind other tasks, so allow generous headroom.
+# Real tasks (50+MB video) can take ~5 min; small clips take ~15 s, so allow generous headroom.
 WS_RESULT_TIMEOUT_SEC = float(os.getenv("WS_RESULT_TIMEOUT_SEC", "600"))
 
 
@@ -61,15 +60,11 @@ class VideoPipelineUser(FastHttpUser):
             return
 
         with open(TEST_FILE, "rb") as f:
-            upload_start = time.perf_counter()
-
             resp = self.client.post(
                 UPLOAD_PATH,
                 files={"file": (os.path.basename(TEST_FILE), f, "video/mp4")},
                 name=f"POST {UPLOAD_PATH}",
             )
-
-            upload_ms = (time.perf_counter() - upload_start) * 1000
 
             if resp.status_code != 200:
                 return
@@ -78,10 +73,10 @@ class VideoPipelineUser(FastHttpUser):
             if not task_id:
                 return
 
-            # Track a separate "result" metric spanning upload + processing.
-            self._track_result(task_id, upload_ms)
+            # time the processing result (WebSocket wait).
+            self._track_result(task_id)
 
-    def _track_result(self, task_id: str, upload_ms: float):
+    def _track_result(self, task_id: str):
         start = time.perf_counter()
         ws = websocket.WebSocket()
         try:
