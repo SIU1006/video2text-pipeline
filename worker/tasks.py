@@ -154,7 +154,7 @@ def metrics(
         autoretry_for=RETRYABLE_EXCEPTIONS,
         retry_backoff=True, # delay autoretries for f(x) * 2s
         max_retries=3)
-def process_video(task_id: str, file_path: str):
+def process_video(self, task_id: str, file_path: str):
     r, audio_path = start_running(task_id, file_path)
     start = time.perf_counter()
     video_length_bucket = "unknown"
