@@ -41,9 +41,7 @@ async def websocket_endpoint(websocket: WebSocket, task_id: str):
             return
 
         try:
-            data = await asyncio.wait_for(
-                wait_for_message(pubsub), timeout=RESULT_WAIT_TIMEOUT_SEC
-            )
+            data = await wait_with_keepalive(websocket, pubsub, RESULT_WAIT_TIMEOUT_SEC)
         except TimeoutError:
             await websocket.send_text(
                 '{"status": "error", "message": "Timed out waiting for the task to finish."}'
