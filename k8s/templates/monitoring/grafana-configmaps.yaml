@@ -12,7 +12,7 @@ data:
       - name: Prometheus
         type: prometheus
         access: proxy
-        url: http://prometheus-service:9090
+        url: http://prometheus-service:{{ .Values.prometheus.service.port }}
         uid: prometheus
         isDefault: true
 ---

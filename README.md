@@ -167,15 +167,6 @@ helm uninstall asyncvtp
 
 > The Whisper model is baked into the image at build time via the `WHISPER_MODEL_SIZE` build arg (default `base`), so it doesn't need to be downloaded again on every pod restart. If you also want to build the canary's `small`-model image, see [Model Management & Canary Releases](#model-management--canary-releases).
 
-Deploy the stable stack:
-
-```bash
-kubectl apply -f k8s/fastapi.yml -f k8s/celery.yml -f k8s/hpa.yml \
-  -f k8s/redis.yml -f k8s/ollama.yml -f k8s/whisper.yml \
-  -f k8s/prometheus.yml -f k8s/grafana.yml -f k8s/mlflow.yml \
-  -f k8s/configmap.yml -f k8s/pvc.yml
-kubectl exec -it deploy/ollama -- ollama pull llama3.2
-```
 
 > **Note:** `k8s/whisper-canary.yml` is intentionally excluded from the default deploy — see [Model Management & Canary Releases](#model-management--canary-releases) below if you want to apply it.
 
