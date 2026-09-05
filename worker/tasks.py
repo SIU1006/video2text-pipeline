@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 ensure_metrics_server_started()
 
 RESULT_TTL_SECONDS = 3600
+RETRYABLE_EXCEPTIONS = (requests.exceptions.RequestException,)
 
 # ============= process_video() helpers =================
 def start_running(task_id: str, file_path: str):
@@ -150,7 +151,7 @@ def metrics(
 
 @celery_app.task(
         name="process_video",
-        autoretry_for=(requests.exceptions.RequestException,),
+        autoretry_for=RETRYABLE_EXCEPTIONS,
         retry_backoff=True, # delay autoretries for f(x) * 2s
         max_retries=3)
 def process_video(task_id: str, file_path: str):
@@ -167,18 +168,38 @@ def process_video(task_id: str, file_path: str):
         store_success(r, task_id, summary)
 
     except Exception as e:
-        store_failure(r, task_id, e)
-        metrics(
-            task_name="process_video",
-            status="failure",
-            exception_type=type(e).__name__,
-            video_length_bucket=video_length_bucket,
+        '''
+        Celery autoretry only works after process_video() is fully completed.
+        So we need to predict if the task will retry, then dont tell the client it failed yet,
+        otherwise cleanup() will delete the input file so client cant retry
+        '''
+        will_retry = isinstance(e, RETRYABLE_EXCEPTIONS) and self.request.retries < self.max_retries
+
+        if will_retry:
+            metrics(
+                task_name="process_video",
+                status="retry",
+                exception_type=type(e).__name__,
+                video_length_bucket=video_length_bucket,
+            )
+        else:
+            store_failure(r, task_id, e)
+            metrics(
+                task_name="process_video",
+                status="failure",
+                exception_type=type(e).__name__,
+                video_length_bucket=video_length_bucket,
         )
         raise
 
     finally:
         metrics(task_name="process_video", start=start, video_length_bucket=video_length_bucket)
-        cleanup(file_path, audio_path)
+
+        if will_retry:
+            # keep file_path
+            cleanup(audio_path)
+        else:
+            cleanup(file_path, audio_path)
 
 
 # ============= sweep_stuck_tasks() helpers =============
