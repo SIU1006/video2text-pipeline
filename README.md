@@ -145,11 +145,24 @@ kind create cluster --config kind-config.yml
 Build the images and load them into kind (`imagePullPolicy: Never` is set in the manifests):
 
 ```bash
-docker build -t asyncvtp-fastapi:latest .
-docker build -t asyncvtp-celery:latest .
-docker build -f Dockerfile.inference --build-arg WHISPER_MODEL_SIZE=base -t asyncvtp-whisper-service:base .
+Install the chart:
+helm install asyncvtp k8s -f k8s/values.yaml -f k8s/values-dev.yaml
 
-kind load docker-image asyncvtp-fastapi:latest asyncvtp-celery:latest asyncvtp-whisper-service:base
+Wait for ollama to be ready, then pull the model:
+kubectl wait --for=condition=available --timeout=120s deployment/ollama
+kubectl exec -it deploy/ollama -- ollama pull llama3.2
+
+To preview the rendered manifests without installing:
+helm template asyncvtp k8s -f k8s/values.yaml -f k8s/values-dev.yaml
+
+To validate the chart:
+helm lint k8s
+
+Upgrade after changing values:
+helm upgrade asyncvtp k8s -f k8s/values.yaml -f k8s/values-dev.yaml
+
+Uninstall:
+helm uninstall asyncvtp
 ```
 
 > The Whisper model is baked into the image at build time via the `WHISPER_MODEL_SIZE` build arg (default `base`), so it doesn't need to be downloaded again on every pod restart. If you also want to build the canary's `small`-model image, see [Model Management & Canary Releases](#model-management--canary-releases).
