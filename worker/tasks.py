@@ -159,6 +159,7 @@ def process_video(self, task_id: str, file_path: str):
     r, audio_path = start_running(task_id, file_path)
     start = time.perf_counter()
     video_length_bucket = "unknown"
+    will_retry = False
 
     try:
         duration_minutes = validate_duration(ffmpeg.probe(file_path))
