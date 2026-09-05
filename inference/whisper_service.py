@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Annotated
 
 import bentoml
+from bentoml.io import File
 from bentoml.metrics import Histogram
 from bentoml.validators import FileSchema
 from faster_whisper import WhisperModel

@@ -36,6 +36,11 @@ def ws_url(host: str, task_id: str) -> str:
     base = host.replace("http://", "").replace("https://", "")
     return f"{scheme}://{base}{WS_PATH_TEMPLATE.format(task_id=task_id)}"
 
+def _wait_for_result(ws: websocket.WebSocket, timeout: float):
+    """Block (gevent-cooperatively) until the server pushes one message."""
+    ws.settimeout(timeout)
+    data = ws.recv()
+    return json.loads(data)
 
 def _wait_for_result(ws: websocket.WebSocket, timeout: float):
     """Block (gevent-cooperatively) until the server pushes one message."""
